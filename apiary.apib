@@ -1,0 +1,242 @@
+FORMAT: 1A
+HOST: https://1csync.syncdatamaster.com/
+
+# Передача данных в Google BigQuery
+
+Сервис записи данных с CSV в таблицы Google BigQuery 
+
+## Важно
+ 
+ - В каждой таблице должно быть поле обязательное **CREATED_AT** *timestamp*.
+
+ - Принятые запросы обрабатываются по принципу очередей.
+
+ - Система контроля синхронизации по дате последнего обновления записей в таблице выполняется на уровне сервера обработки запроса, в данной документации не описана.
+
+ - При возникновении ошибок передачи или записи данных в BigQuery выполняется отправка уведомлений на канал \bot в Telegram.
+ 
+
+## Авторизация
+
+Bearer токен передается в заголовке запроса.
+
+
+## Создание таблицы [/create-table]
+ 
+| Параметр         | Описание                    | Тип      | Длина         | Обязательный  |
+|------------------|-----------------------------|:--------:|:-------------:|:-------------:|
+| table            | Название таблицы            |  String  | 3-20 символов |      Да       |
+| fields           | Массив со полями таблицы    |  Array   |               |      Да       |
+| fields.name      | Название поля               |  String  | 3-30 символов |      Да       |
+| fields.type      | Тип поля                    |  String  | 3-20 символов |      Да       |
+| fields.required  | Признак обязательного поля  |  Boolean |               |      Нет      |
+
+Допустимые значения для поля **fields.type**:
+
+   INTEGER   
+   STRING    
+   BYTES     
+   FLOAT     
+   NUMERIC   
+   BOOLEAN   
+   TIMESTAMP 
+   DATE      
+   TIME      
+   DATETIME
+
+
+По умолчанию параметру **fields.required** присвоено значение *false*.
+
+
+### API: Создать таблицу [POST]
+
++ Request (application/json)
+
+    + Headers
+    
+            Token: Bearer njd6gsds5s45s24d4sd
+            
+    + Body
+
+            {
+                "table": "products",
+                "fields":[
+                 {
+                    "name": "product_id",
+                    "type": "string",
+                    "required": true
+                 },
+                 {
+                    "name": "product_name",
+                    "type": "string",
+                    "required": true
+                 },
+                 {
+                    "name": "price",
+                    "type": "string",
+                    "required": true
+                 }
+                ]
+            }
+
+            
+            
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "status": "good"
+            }
+            
+
+## Удаление таблицы [/drop-table]
+
+
+
+| Параметр  | Описание          | Тип      | Длина         | Обязательный  |
+|-----------|-------------------|:--------:|:-------------:|:-------------:|
+| table     | Название таблицы  |  String  | 3-20 символов |      Да       |
+   
+
+
+### API: Удалить таблицу [POST]
+
++ Request (application/json)
+
+    + Headers
+    
+            Token: Bearer njd6gsds5s45s24d4sd
+            
+    + Body
+
+            {
+                "table": "products"
+            }
+
+            
+            
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "status": "good"
+            }
+
+## Запись данных [/insert-data]
+
+В каждом запросе на запись данных нужно передавать значение в поле **CREATED_AT** *timestamp**.
+
+
+
+Соответствие кодов статусов:
+
+| Код | Статус     | Описание                       |
+|:---:|------------|--------------------------------|
+|  1  | waiting    | Задача синхронизации в очереди |
+|  2  | inprogress | Синхронизация выполняется      |
+|  3  | completed  | Синхронизация выполнена        |
+|  4  | canceled   | Задача синхронизации отменена  |
+
+
+В теле ответа **queries** отображает количество использованых API-запросов по данному процессу
+
+
+
+### API: Отправка запроса [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Token: Bearer njd6gsds5s45s24d4sd
+
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "status": "good"
+            }
+               
+            
+## Удаление данных по дате [/delete-data-by-date]
+
+
+| Параметр    | Описание                           | Тип      | Длина         | Обязательный  |
+|-------------|------------------------------------|:--------:|:-------------:|:-------------:|
+| table       | Название таблицы                   |  String  | 3-20 символов |      Да       |
+| field_date  | Поле, по которому удаляются записи |  String  | 3-30 символов |      Да       |
+| date        | Дата, с которой удаляются значения |  Date    |               |      Да       |
+
+
+### API: Удаление данных по дате [POST]
+
+
++ Request (application/json)
+
+    + Headers
+
+            Token: Bearer njd6gsds5s45s24d4sd
+
+    + Body
+
+            {
+                "table": "invoices",
+                "field_date": "invoice_date",
+                "date": 2019-03-01
+            }
+
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "status": "good"
+            }
+
+
+## Удаление данных по списку значений [/delete-data-by-id]
+
+
+| Параметр    | Описание                           | Тип      | Длина         | Обязательный  |
+|-------------|------------------------------------|:--------:|:-------------:|:-------------:|
+| table       | Название таблицы                   |  String  | 3-20 символов |      Да       |
+| field_id    | Поле, по которому удаляются записи |  String  | 3-30 символов |      Да       |
+| ids.*       | Массив с удаляемыми значениями     |  Array   |               |      Да       |
+
+### API: Удаление данных по списку значений [POST]
+
+
++ Request (application/json)
+
+    + Headers
+
+            Token: Bearer njd6gsds5s45s24d4sd
+
+    + Body
+
+            {
+                "table": "invoices",
+                "field_id": "invoice_id",
+                "ids": [1001,1002,1003]
+            }
+
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "status": "good"
+            }
+            
+            
+            
+            
+            
+            
+            
