@@ -54,7 +54,7 @@ HOST: https://1csync.syncdatamaster.com/
 
     + Headers
     
-            Token: Bearer njd6gsds5s45s24d4sd
+            Authorization: njd6gsds5s45s24d4sd
             
     + Body
 
@@ -102,11 +102,11 @@ HOST: https://1csync.syncdatamaster.com/
 
 ### API: Удалить таблицу [POST]
 
-+ Request (application/json)
++ Request
 
     + Headers
     
-            Token: Bearer njd6gsds5s45s24d4sd
+            Authorization: njd6gsds5s45s24d4sd
             
     + Body
 
@@ -128,34 +128,35 @@ HOST: https://1csync.syncdatamaster.com/
 
  - В каждом запросе на запись данных нужно передавать значение в поле **CREATED_AT** *timestamp**.
  - В файле csv нельзя передавать первой строкой заголовок полей.
+ - Поля в параметре **fields** нужно передавать в точном порядке csv файла.
+ - При записи в csv файл нужно применить регулярное выражение **/[^a-zA-ZА-Яа-я0-9\s\-:,.!?=]/u**, разрешив только указанны символы.
+ - Использовать символ **;** в качестве разделителя полей.
+ - Необходимо передать в запросе zip-архив.
  - В zip-архиве можно разместить несколько csv файлов для импорта в одну таблицу.
 
 
-Соответствие кодов статусов:
-
-| Код | Статус     | Описание                       |
-|:---:|------------|--------------------------------|
-|  1  | waiting    | Задача синхронизации в очереди |
-|  2  | inprogress | Синхронизация выполняется      |
-|  3  | completed  | Синхронизация выполнена        |
-|  4  | canceled   | Задача синхронизации отменена  |
+| Параметр         | Описание                    | Тип      | Длина         | Обязательный  |
+|------------------|-----------------------------|:--------:|:-------------:|:-------------:|
+| table            | Название таблицы            |  String  | 3-20 символов |      Да       |
+| fields           | Массив со полями таблицы    |  Array   |               |      Да       |
+| csv_data.zip     | бинарный файл               |  String  |               |      Да       |
 
 
 
 
 ### API: Записать данные [POST]
 
-+ Request (application/json)
++ Request
 
     + Headers
 
-            Token: Bearer njd6gsds5s45s24d4sd
+            Authorization: njd6gsds5s45s24d4sd
             
     + Body
 
             {
                 "table": "products",
-                "zip_file": "data.zip",
+                "csv_data": "data.zip",
                 "fields": ["product_id","product_name","price"]
             }
 
@@ -182,11 +183,11 @@ HOST: https://1csync.syncdatamaster.com/
 ### API: Удаление данных по дате [POST]
 
 
-+ Request (application/json)
++ Request
 
     + Headers
 
-            Token: Bearer njd6gsds5s45s24d4sd
+            Authorization: njd6gsds5s45s24d4sd
 
     + Body
 
@@ -218,11 +219,11 @@ HOST: https://1csync.syncdatamaster.com/
 ### API: Удаление данных по списку значений [POST]
 
 
-+ Request (application/json)
++ Request
 
     + Headers
 
-            Token: Bearer njd6gsds5s45s24d4sd
+            Authorization: njd6gsds5s45s24d4sd
 
     + Body
 
